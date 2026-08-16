@@ -25,7 +25,7 @@
       border-radius: 4px;
       background: #111213;
       color: #fff;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       outline: none;
     }
     input:focus {
@@ -44,22 +44,31 @@
     button:hover {
       background: #0082cc;
     }
+    #status {
+      margin-top: 8px;
+      font-size: 11px;
+      text-align: center;
+      color: #00ff88;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <label for="robuxVal">Type Displayed Robux:</label>
   <input type="text" id="robuxVal" placeholder="e.g. 10 or 50,000" />
   <button id="saveBtn">Apply Change</button>
+  <div id="status">✓ Applied!</div>
 
   <script>
-    // Load previously saved value into the input box
+    const statusDiv = document.getElementById("status");
+
+    // Load saved value
     chrome.storage.sync.get(["customRobux"], (data) => {
       if (data.customRobux !== undefined) {
         document.getElementById("robuxVal").value = data.customRobux;
       }
     });
 
-    // Send update when user clicks Apply Change
     document.getElementById("saveBtn").addEventListener("click", () => {
       const inputVal = document.getElementById("robuxVal").value.trim();
 
@@ -68,7 +77,12 @@
       chrome.storage.sync.set({ customRobux: inputVal }, () => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs[0]?.id) {
-            chrome.tabs.sendMessage(tabs[0].id, { action: "update", value: inputVal });
+            chrome.tabs.sendMessage(tabs[0].id, { action: "update", value: inputVal }, (response) => {
+              // Show status indicator on success
+              statusDiv.style.display = "block";
+              statusDiv.textContent = "✓ Applied to page!";
+              setTimeout(() => { statusDiv.style.display = "none"; }, 2000);
+            });
           }
         });
       });
