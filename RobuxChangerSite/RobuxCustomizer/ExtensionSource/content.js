@@ -1,41 +1,55 @@
 let targetRobux = null;
 
-// Fetch saved value on startup
 chrome.storage.sync.get(["customRobux"], (data) => {
   if (data.customRobux !== undefined && data.customRobux !== "") {
     targetRobux = data.customRobux;
-    applyChange();
+    applyOverlay();
   }
 });
 
-// Receive update directly from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "update" && request.value !== undefined) {
     targetRobux = request.value;
-    applyChange();
+    applyOverlay();
     sendResponse({ status: "success" });
   }
 });
 
-function applyChange() {
+function applyOverlay() {
   if (!targetRobux) return;
 
-  // 1. Direct ID check
-  const navAmount = document.getElementById("nav-robux-amount");
-  if (navAmount && navAmount.textContent !== targetRobux) {
-    navAmount.textContent = targetRobux;
+  const realAmount = document.getElementById("nav-robux-amount");
+  if (!realAmount) return;
+
+  // 1. Hide the original text without breaking the layout
+  realAmount.style.opacity = "0";
+  realAmount.style.pointerEvents = "none";
+
+  // 2. Check if fake overlay element already exists
+  let fakeElement = document.getElementById("custom-robux-overlay");
+
+  if (!fakeElement) {
+    fakeElement = document.createElement("span");
+    fakeElement.id = "custom-robux-overlay";
+    fakeElement.style.position = "absolute";
+    fakeElement.style.left = "0";
+    fakeElement.style.top = "0";
+    fakeElement.style.color = "#ffffff";
+    fakeElement.style.fontWeight = "bold";
+    fakeElement.style.fontSize = window.getComputedStyle(realAmount).fontSize;
+
+    // Ensure parent container supports absolute positioning
+    if (realAmount.parentElement) {
+      realAmount.parentElement.style.position = "relative";
+      realAmount.parentElement.appendChild(fakeElement);
+    }
   }
 
-  // 2. Query selector check for standard Roblox navbar structure
-  const robuxContainers = document.querySelectorAll("#nav-robux-container, .nav-robux-container, #nav-robux-balance");
-  robuxContainers.forEach((container) => {
-    // Find any span inside the container that holds the balance text
-    const span = container.querySelector("span") || container;
-    if (span && span.textContent !== targetRobux) {
-      span.textContent = targetRobux;
-    }
-  });
+  // 3. Update the overlay text
+  if (fakeElement.textContent !== targetRobux) {
+    fakeElement.textContent = targetRobux;
+  }
 }
 
-// Run frequently to beat Roblox's internal React updates
-setInterval(applyChange, 100);
+// Keep checking in case Roblox re-renders the DOM navigation bar
+setInterval(applyOverlay, 200);
