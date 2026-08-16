@@ -1,30 +1,37 @@
 let targetRobux = "10,000,000";
 
+// Load saved custom number on page start
 chrome.storage.sync.get(["customRobux"], (data) => {
   if (data.customRobux) {
     targetRobux = data.customRobux;
-  }
-});
-
-chrome.runtime.onMessage.addListener((request) => {
-  if (request.action === "update") {
-    targetRobux = request.value;
     applyChange();
   }
 });
 
+// Listen for live updates from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "update") {
+    targetRobux = request.value;
+    applyChange();
+    sendResponse({ status: "success" });
+  }
+});
+
 function applyChange() {
+  if (!targetRobux) return;
+
+  // Header navigation bar counter
   const navAmount = document.getElementById("nav-robux-amount");
-  if (navAmount && navAmount.textContent !== targetRobux) {
+  if (navAmount) {
     navAmount.textContent = targetRobux;
   }
 
+  // Any additional Robux text elements on the page
   const balanceElements = document.querySelectorAll(".robux-balance, .nav-robux-balance");
   balanceElements.forEach((el) => {
-    if (el.textContent !== targetRobux) {
-      el.textContent = targetRobux;
-    }
+    el.textContent = targetRobux;
   });
 }
 
+// Continuous check for dynamic page re-renders
 setInterval(applyChange, 500);
