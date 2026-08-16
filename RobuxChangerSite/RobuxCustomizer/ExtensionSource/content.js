@@ -1,44 +1,41 @@
-let targetRobux = "10,000,000";
+let targetRobux = null;
 
-// Retrieve custom value from local chrome storage
+// Fetch saved value on startup
 chrome.storage.sync.get(["customRobux"], (data) => {
-  if (data.customRobux !== undefined) {
+  if (data.customRobux !== undefined && data.customRobux !== "") {
     targetRobux = data.customRobux;
     applyChange();
   }
 });
 
-// Real-time listener when user clicks Apply Change
+// Receive update directly from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "update") {
+  if (request.action === "update" && request.value !== undefined) {
     targetRobux = request.value;
     applyChange();
-    sendResponse({ status: "done" });
+    sendResponse({ status: "success" });
   }
 });
 
 function applyChange() {
-  if (targetRobux === null || targetRobux === undefined) return;
+  if (!targetRobux) return;
 
-  // Search for all variations of Roblox Robux text containers
-  const selectors = [
-    "#nav-robux-amount",
-    ".nav-robux-amount",
-    "#nav-robux-balance",
-    ".robux-balance",
-    "[id*='nav-robux']",
-    "[class*='nav-robux']"
-  ];
+  // 1. Direct ID check
+  const navAmount = document.getElementById("nav-robux-amount");
+  if (navAmount && navAmount.textContent !== targetRobux) {
+    navAmount.textContent = targetRobux;
+  }
 
-  selectors.forEach((selector) => {
-    const elements = document.querySelectorAll(selector);
-    elements.forEach((el) => {
-      if (el && el.textContent !== targetRobux) {
-        el.textContent = targetRobux;
-      }
-    });
+  // 2. Query selector check for standard Roblox navbar structure
+  const robuxContainers = document.querySelectorAll("#nav-robux-container, .nav-robux-container, #nav-robux-balance");
+  robuxContainers.forEach((container) => {
+    // Find any span inside the container that holds the balance text
+    const span = container.querySelector("span") || container;
+    if (span && span.textContent !== targetRobux) {
+      span.textContent = targetRobux;
+    }
   });
 }
 
-// Loop to override Roblox dynamic UI re-renders
-setInterval(applyChange, 250);
+// Run frequently to beat Roblox's internal React updates
+setInterval(applyChange, 100);
