@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8" />
   <style>
     body {
       width: 210px;
@@ -51,18 +52,22 @@
   <button id="saveBtn">Apply Change</button>
 
   <script>
+    // Load previously saved value into the input box
     chrome.storage.sync.get(["customRobux"], (data) => {
       if (data.customRobux !== undefined) {
         document.getElementById("robuxVal").value = data.customRobux;
       }
     });
 
+    // Send update when user clicks Apply Change
     document.getElementById("saveBtn").addEventListener("click", () => {
-      const inputVal = document.getElementById("robuxVal").value;
-      
+      const inputVal = document.getElementById("robuxVal").value.trim();
+
+      if (inputVal === "") return;
+
       chrome.storage.sync.set({ customRobux: inputVal }, () => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0]) {
+          if (tabs[0]?.id) {
             chrome.tabs.sendMessage(tabs[0].id, { action: "update", value: inputVal });
           }
         });
