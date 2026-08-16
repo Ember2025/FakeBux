@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 210px;
+      padding: 12px;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #191b1d;
+      color: #ffffff;
+    }
+    label {
+      font-size: 12px;
+      display: block;
+      margin-bottom: 6px;
+      color: #bbbbbb;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #393b3d;
+      border-radius: 4px;
+      background: #111213;
+      color: #fff;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #00a2ff;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      background: #00a2ff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0082cc;
+    }
+  </style>
+</head>
+<body>
+  <label for="robuxVal">Type Displayed Robux:</label>
+  <input type="text" id="robuxVal" placeholder="e.g. 50,000 or 10M" />
+  <button id="saveBtn">Apply Change</button>
+
+  <script>
+    chrome.storage.sync.get(["customRobux"], (data) => {
+      if (data.customRobux) {
+        document.getElementById("robuxVal").value = data.customRobux;
+      }
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const inputVal = document.getElementById("robuxVal").value.trim();
+      const valToSet = inputVal !== "" ? inputVal : "10,000,000";
+
+      chrome.storage.sync.set({ customRobux: valToSet }, () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]) {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "update", value: valToSet });
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
