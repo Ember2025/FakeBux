@@ -1,37 +1,44 @@
 let targetRobux = "10,000,000";
 
-// Load saved custom number on page start
+// Retrieve custom value from local chrome storage
 chrome.storage.sync.get(["customRobux"], (data) => {
-  if (data.customRobux) {
+  if (data.customRobux !== undefined) {
     targetRobux = data.customRobux;
     applyChange();
   }
 });
 
-// Listen for live updates from popup
+// Real-time listener when user clicks Apply Change
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "update") {
     targetRobux = request.value;
     applyChange();
-    sendResponse({ status: "success" });
+    sendResponse({ status: "done" });
   }
 });
 
 function applyChange() {
-  if (!targetRobux) return;
+  if (targetRobux === null || targetRobux === undefined) return;
 
-  // Header navigation bar counter
-  const navAmount = document.getElementById("nav-robux-amount");
-  if (navAmount) {
-    navAmount.textContent = targetRobux;
-  }
+  // Search for all variations of Roblox Robux text containers
+  const selectors = [
+    "#nav-robux-amount",
+    ".nav-robux-amount",
+    "#nav-robux-balance",
+    ".robux-balance",
+    "[id*='nav-robux']",
+    "[class*='nav-robux']"
+  ];
 
-  // Any additional Robux text elements on the page
-  const balanceElements = document.querySelectorAll(".robux-balance, .nav-robux-balance");
-  balanceElements.forEach((el) => {
-    el.textContent = targetRobux;
+  selectors.forEach((selector) => {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach((el) => {
+      if (el && el.textContent !== targetRobux) {
+        el.textContent = targetRobux;
+      }
+    });
   });
 }
 
-// Continuous check for dynamic page re-renders
-setInterval(applyChange, 500);
+// Loop to override Roblox dynamic UI re-renders
+setInterval(applyChange, 250);
