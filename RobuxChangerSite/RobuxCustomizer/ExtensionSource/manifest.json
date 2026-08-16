@@ -2,16 +2,21 @@
   "manifest_version": 3,
   "name": "FAKE ROBUX NUMBER CHANGER",
   "version": "1.0",
-  "description": "Customizes the visual Robux counter in real-time.",
-  "permissions": ["storage"],
+  "description": "Locally customizes displayed Robux on Roblox.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.roblox.com/*"
+  ],
   "action": {
     "default_popup": "popup.html"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.roblox.com/*", "https://web.roblox.com/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+      "matches": ["https://*.roblox.com/*"],
+      "js": ["content.js"]
     }
   ]
 }
