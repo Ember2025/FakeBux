@@ -47,24 +47,23 @@
 </head>
 <body>
   <label for="robuxVal">Type Displayed Robux:</label>
-  <input type="text" id="robuxVal" placeholder="e.g. 50,000 or 10M" />
+  <input type="text" id="robuxVal" placeholder="e.g. 10 or 50,000" />
   <button id="saveBtn">Apply Change</button>
 
   <script>
     chrome.storage.sync.get(["customRobux"], (data) => {
-      if (data.customRobux) {
+      if (data.customRobux !== undefined) {
         document.getElementById("robuxVal").value = data.customRobux;
       }
     });
 
     document.getElementById("saveBtn").addEventListener("click", () => {
-      const inputVal = document.getElementById("robuxVal").value.trim();
-      const valToSet = inputVal !== "" ? inputVal : "10,000,000";
-
-      chrome.storage.sync.set({ customRobux: valToSet }, () => {
+      const inputVal = document.getElementById("robuxVal").value;
+      
+      chrome.storage.sync.set({ customRobux: inputVal }, () => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs[0]) {
-            chrome.tabs.sendMessage(tabs[0].id, { action: "update", value: valToSet });
+            chrome.tabs.sendMessage(tabs[0].id, { action: "update", value: inputVal });
           }
         });
       });
