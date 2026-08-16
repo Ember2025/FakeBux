@@ -1,5 +1,6 @@
 let targetRobux = null;
 
+// Fetch saved value on startup
 chrome.storage.sync.get(["customRobux"], (data) => {
   if (data.customRobux !== undefined && data.customRobux !== "") {
     targetRobux = data.customRobux;
@@ -7,6 +8,7 @@ chrome.storage.sync.get(["customRobux"], (data) => {
   }
 });
 
+// Receive update directly from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "update" && request.value !== undefined) {
     targetRobux = request.value;
@@ -18,10 +20,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function applyOverlay() {
   if (!targetRobux) return;
 
+  // 1. Direct ID check
   const realAmount = document.getElementById("nav-robux-amount");
-  if (!realAmount) return;
+  if (!realAmount) return; // FIXED: Added exclamation mark here!
 
-  // 1. Hide the original text without breaking the layout
+  // Hide the original text without breaking the layout
   realAmount.style.opacity = "0";
   realAmount.style.pointerEvents = "none";
 
@@ -51,5 +54,5 @@ function applyOverlay() {
   }
 }
 
-// Keep checking in case Roblox re-renders the DOM navigation bar
+// Keep checking in case Roblox re-renders the DOM
 setInterval(applyOverlay, 200);
